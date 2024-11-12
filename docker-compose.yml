@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  
+  jira-servicedesk:
+    image: atlassian/jira-servicedesk:latest
+    container_name: jira-servicedesk
+    ports:
+      - "8080:8080"
+    env_file:
+      - ./.env
+    depends_on:
+      - mysql
+    volumes:
+      - jira_data:/var/atlassian/jira
+    networks:
+      - default
+
+  mysql:
+    platform: linux/x86_64
+    image: mysql:8.0.37
+    ports: 
+      - "3306:3306"
+    env_file:
+      - .env
+    hostname: db
+    command: --default-authentication-plugin=caching_sha2_password --sql_mode="" --log-bin-trust-function-creators=1
+    # command: --mysql-native-password=ON --sql_mode="" --log-bin-trust-function-creators=1
+    healthcheck:
+        test: '/usr/bin/mysql -h127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --execute "SHOW DATABASES;"'
+        interval: 2s
+        timeout: 20s
+        retries: 10000
+    volumes:
+        - db-volume:/var/lib/mysql
+    networks:
+        - default
+volumes:
+  jira_data:
+  db-volume:
